@@ -1,0 +1,197 @@
+CREATE SCHEMA `podsistem1` ;
+
+CREATE TABLE `podsistem1`.`mesto` (
+  `idMes` INT NOT NULL AUTO_INCREMENT,
+  `naziv` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`idMes`));
+
+CREATE TABLE `podsistem1`.`korisnik` (
+  `idKor` INT NOT NULL AUTO_INCREMENT,
+  `ime` VARCHAR(45) NOT NULL,
+  `email` VARCHAR(45) NOT NULL,
+  `godiste` INT NOT NULL,
+  `pol` CHAR(1) NOT NULL,
+  `idMes` INT NOT NULL,
+  PRIMARY KEY (`idKor`),
+  INDEX `fkMesto_idx` (`idMes` ASC) VISIBLE,
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE,
+  CONSTRAINT `korisnikMesto`
+    FOREIGN KEY (`idMes`)
+    REFERENCES `podsistem1`.`mesto` (`idMes`)
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE);
+
+CREATE SCHEMA `podsistem2` ;
+
+CREATE TABLE `podsistem2`.`kategorija` (
+  `idKat` INT NOT NULL AUTO_INCREMENT,
+  `naziv` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`idKat`));
+
+CREATE TABLE `podsistem2`.`korisnik` (
+  `idKor` INT NOT NULL AUTO_INCREMENT,
+  `ime` VARCHAR(45) NOT NULL,
+  `email` VARCHAR(45) NOT NULL,
+  `godiste` INT NOT NULL,
+  `pol` CHAR(1) NOT NULL,
+  PRIMARY KEY (`idKor`),
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE);
+  
+
+CREATE TABLE `podsistem2`.`video` (
+  `idVid` int NOT NULL AUTO_INCREMENT,
+  `naziv` varchar(45) NOT NULL,
+  `trajanje` int NOT NULL,
+  `datumVreme` datetime NOT NULL,
+  `vlasnik` int NOT NULL,
+  PRIMARY KEY (`idVid`),
+  KEY `vlasnik_idx` (`vlasnik`),
+  CONSTRAINT `vlasnik` FOREIGN KEY (`vlasnik`) REFERENCES `korisnik` (`idKor`) ON UPDATE CASCADE
+);
+
+CREATE TABLE `podsistem2`.`pripada` (
+  `idVid` INT NOT NULL,
+  `idKat` INT NOT NULL,
+  PRIMARY KEY (`idVid`, `idKat`),
+  INDEX `idKat_idx` (`idKat` ASC) VISIBLE,
+  CONSTRAINT `pripadaVideo`
+    FOREIGN KEY (`idVid`)
+    REFERENCES `podsistem2`.`video` (`idVid`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `pripadaKat`
+    FOREIGN KEY (`idKat`)
+    REFERENCES `podsistem2`.`kategorija` (`idKat`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+
+CREATE SCHEMA `podsistem3` ;
+
+CREATE TABLE `podsistem3`.`korisnik` (
+  `idKor` INT NOT NULL AUTO_INCREMENT,
+  `ime` VARCHAR(45) NOT NULL,
+  `email` VARCHAR(45) NOT NULL,
+  `godiste` INT NOT NULL,
+  `pol` CHAR(1) NOT NULL,
+  PRIMARY KEY (`idKor`),
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE);
+  
+CREATE TABLE `podsistem3`.`video` (
+  `idVid` int NOT NULL AUTO_INCREMENT,
+  `naziv` varchar(45) NOT NULL,
+  `trajanje` int NOT NULL,
+  `datumVreme` datetime NOT NULL,
+  `vlasnik` int NOT NULL,
+  PRIMARY KEY (`idVid`),
+  KEY `vlasnik_idx` (`vlasnik`),
+  CONSTRAINT `vlasnik` FOREIGN KEY (`vlasnik`) REFERENCES `podsistem3`.`korisnik` (`idKor`) ON UPDATE CASCADE
+);
+
+CREATE TABLE `podsistem3`.`paket` (
+  `idPak` INT NOT NULL AUTO_INCREMENT,
+  `mesecnaCena` DECIMAL(10,2) NOT NULL,
+  `naziv` varchar(45) NOT NULL,	
+  PRIMARY KEY (`idPak`));
+
+CREATE TABLE `podsistem3`.`pretplata` (
+  `idPre` INT NOT NULL AUTO_INCREMENT,
+  `datumVreme` DATETIME NOT NULL,
+  `placenaCena` DECIMAL(10,2) NOT NULL,
+  `idPak` INT NOT NULL,
+  `idKor` INT NOT NULL,
+  PRIMARY KEY (`idPre`),
+  INDEX `idPak_idx` (`idPak` ASC) VISIBLE,
+  INDEX `idKor_idx` (`idKor` ASC) VISIBLE,
+  CONSTRAINT `pretplataPaket`
+    FOREIGN KEY (`idPak`)
+    REFERENCES `podsistem3`.`paket` (`idPak`)
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE,
+  CONSTRAINT `pretplataKorisnik`
+    FOREIGN KEY (`idKor`)
+    REFERENCES `podsistem3`.`korisnik` (`idKor`)
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE);
+
+CREATE TABLE `podsistem3`.`gleda` (
+  `idGle` INT NOT NULL AUTO_INCREMENT,
+  `datumVreme` DATETIME NOT NULL,
+  `pocetniSekund` INT NOT NULL,
+  `trajanje` INT NOT NULL,
+  `korisnik` INT NOT NULL,
+  `idVid` INT NOT NULL,
+  PRIMARY KEY (`idGle`),
+  INDEX `idKor_idx` (`korisnik` ASC) VISIBLE,
+  INDEX `idVid_idx` (`idVid` ASC) VISIBLE,
+  CONSTRAINT `gledaKorisnik`
+    FOREIGN KEY (`korisnik`)
+    REFERENCES `podsistem3`.`korisnik` (`idKor`)
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE,
+  CONSTRAINT `gledaVideo`
+    FOREIGN KEY (`idVid`)
+    REFERENCES `podsistem3`.`video` (`idVid`)
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE);
+
+CREATE TABLE `podsistem3`.`ocena` (
+  `korisnik` INT NOT NULL,
+  `video` INT NOT NULL,
+  `ocena` INT NOT NULL,
+  `datumVreme` DATETIME NOT NULL,
+  PRIMARY KEY (`korisnik`, `video`),
+  INDEX `video_idx` (`video` ASC) VISIBLE,
+  CONSTRAINT `ocenaKorisnik`
+    FOREIGN KEY (`korisnik`)
+    REFERENCES `podsistem3`.`korisnik` (`idKor`)
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE,
+  CONSTRAINT `ocenaVideo`
+    FOREIGN KEY (`video`)
+    REFERENCES `podsistem3`.`video` (`idVid`)
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE);
+
+
+INSERT INTO `podsistem1`.`mesto` (`idMes`,`naziv`)
+VALUES (1,'Beograd'), (2,'Kragujevac'), (3,'Novi Sad');
+
+INSERT INTO `podsistem1`.`korisnik` (`idKor`,`ime`,`email`,`godiste`,`pol`,`idMes`)
+VALUES (1,'Tijana','tija.brkovic@gmail.com',2002,'F',1), (2,'Bogdan','bogdan.brkovic@gmail.com',2006,'M',2);
+
+
+INSERT INTO `podsistem2`.`korisnik` (`idKor`,`ime`,`email`,`godiste`,`pol`)
+VALUES (1, 'Tijana','tija.brkovic@gmail.com',2002,'F'),  (2, 'Bogdan','bogdan.brkovic@gmail.com',2006,'M');
+
+
+INSERT INTO `podsistem2`.`kategorija` (`idKat`,`naziv`)
+VALUES (1, 'komedija'), (2, 'akcija'), (3, 'drama');
+
+INSERT INTO `podsistem2`.`video` (`idVid`,`naziv`,`trajanje`,`datumVreme`,`vlasnik`)
+VALUES (1, 'video1', 100, '2022-06-01 10:00:00', 1), (2, 'video2', 150, '2023-02-21 20:30:00', 2);
+
+INSERT INTO `podsistem2`.`pripada` (`idVid`,`idKat`)
+VALUES (1, 2), (2, 3);
+
+INSERT INTO `podsistem3`.`korisnik` (`idKor`,`ime`,`email`,`godiste`,`pol`)
+VALUES (1, 'Tijana','tija.brkovic@gmail.com',2002,'F'),  (2, 'Bogdan','bogdan.brkovic@gmail.com',2006,'M');
+
+INSERT INTO `podsistem3`.`video` (`idVid`,`naziv`,`trajanje`,`datumVreme`,`vlasnik`)
+VALUES (1, 'video1', 100, '2022-06-01 10:00:00', 1), (2, 'video2', 150, '2023-02-21 20:30:00', 2);
+
+INSERT INTO `podsistem3`.`gleda` (`idGle`,`datumVreme`,`pocetniSekund`,`trajanje`,`korisnik`,`idVid`)
+VALUES (1, '2022-07-20 16:00:00', 0, 95, 1, 1), (2, '2024-02-20 11:00:00', 10, 15, 2, 1);
+
+INSERT INTO `podsistem3`.`ocena` (`korisnik`,`video`,`ocena`,`datumVreme`)
+VALUES (2,1,10,'2024-02-20 13:00:00');
+
+INSERT INTO `podsistem3`.`paket`(`idPak`,`mesecnaCena`,`naziv`)
+VALUES (1, 500, 'prvi'), (2, 1000.0, 'drugi');
+
+INSERT INTO `podsistem3`.`pretplata` (`idPre`,`datumVreme`,`placenaCena`,`idPak`,`idKor`)
+VALUES (1, '2022-07-01 10:00:00', 500.0, 1,1);
+
+
+
+
+
